@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaLearn</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect rx=%2222%22 width=%22100%22 height=%22100%22 fill=%22%23635bff%22/><text x=%2250%22 y=%2268%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22800%22>I</text></svg>">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <button id="backToTopBtn" class="back-to-top-btn hidden" type="button" onclick="scrollPageToTop()" aria-label="Back to top">
+        ↑
+    </button>
+
+    <!-- ================= AUTO-LOGOUT WARNING ================= -->
+    <div id="autoLogoutOverlay" class="security-code-overlay hidden">
+        <div class="security-code-card">
+            <div class="forgot-icon">⏳</div>
+            <h2>Still there?</h2>
+            <p>You've been inactive for a while. For your security, you'll be logged out in <strong id="autoLogoutCountdown">30</strong> seconds.</p>
+            <div class="security-code-actions">
+                <button class="btn primary full" type="button" onclick="stayLoggedIn()">Stay Logged In</button>
+                <button class="text-button" type="button" onclick="forceLogout()">Log Out Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CERTIFICATE MODAL ================= -->
+    <div id="certificateOverlay" class="security-code-overlay hidden">
+        <div class="security-code-card certificate-card">
+            <button class="back-button certificate-close" type="button" onclick="closeCertificate()">✕</button>
+            <div id="certificateContent" class="certificate-content"></div>
+            <div class="security-code-actions">
+                <button class="btn primary full" type="button" onclick="printCertificate()">🖨️ Print Certificate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PRINTABLE PROGRESS REPORT (screen-hidden) ================= -->
+    <div id="printableReport" class="printable-report"></div>
+    <div id="securityCodeOverlay" class="security-code-overlay hidden">
+        <div class="security-code-card">
+            <div class="forgot-icon">🔐</div>
+            <h2>Enter Security Code</h2>
+            <p id="securityCodeMessage">We sent a 6-digit security code to your Gmail. Enter it below to continue.</p>
+
+            <div id="securityCodeDemoNote" class="security-code-demo-note">
+                Prototype mode: no real email server is connected yet, so the code is shown here instead of being emailed. <strong id="securityCodeDemoValue">000000</strong>
+            </div>
+
+            <input type="text" id="securityCodeInput" inputmode="numeric" maxlength="6" placeholder="••••••">
+
+            <div class="security-code-actions">
+                <button class="btn primary full" type="button" onclick="confirmSecurityCode()">Verify Code</button>
+                <button class="text-button" type="button" onclick="resendSecurityCode()">Resend Code</button>
+                <button class="back-button" type="button" onclick="cancelSecurityCode()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="termsOverlay" class="security-code-overlay hidden" onclick="closeTermsOnBackdrop(event)">
+        <div class="security-code-card terms-card">
+            <h2>Terms & Conditions</h2>
+            <div class="terms-body">
+                <p><strong>1. About this prototype.</strong> InstaLearn is a student capstone project built for demonstration purposes. It is not a commercial product.</p>
+                <p><strong>2. Your account.</strong> Login uses Firebase Authentication with your Gmail. Keep your password private; InstaLearn will never ask for it outside this website.</p>
+                <p><strong>3. Your data.</strong> Study progress, subjects, and settings are currently stored on your own browser/device, not on a central server. Clearing your browser data may erase this progress.</p>
+                <p><strong>4. Acceptable use.</strong> Please use InstaLearn respectfully and for learning purposes only.</p>
+                <p><strong>5. Changes.</strong> As a prototype, features may change or be added as development continues.</p>
+            </div>
+            <button class="btn primary full" type="button" onclick="closeTerms()">Got it</button>
+        </div>
+    </div>
+
+    <div id="certificateOverlay" class="security-code-overlay hidden">
+        <div class="security-code-card certificate-card">
+            <button class="certificate-close" type="button" onclick="closeCertificate()">×</button>
+            <div class="certificate-inner printable-report" id="certificatePrintArea">
+                <p class="certificate-brand">Insta<span>Learn</span></p>
+                <p class="certificate-eyebrow">Certificate of Completion</p>
+                <div class="certificate-icon" id="certificateSubjectIcon">🏆</div>
+                <p class="certificate-line">This certifies that</p>
+                <h2 class="certificate-name" id="certificateStudentName">Student</h2>
+                <p class="certificate-line">has successfully completed all topics in</p>
+                <h3 class="certificate-subject" id="certificateSubjectName">Subject</h3>
+                <p class="certificate-date" id="certificateDate">Date</p>
+            </div>
+            <div class="security-code-actions">
+                <button class="btn primary full" type="button" onclick="window.print()">🖨 Print Certificate</button>
+                <button class="text-button" type="button" onclick="closeCertificate()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SPLASH / WELCOME ================= -->
+    <section id="welcomePage" class="page active">
+        <div class="welcome-background">
+            <div class="floating-shape shape-one"></div>
+            <div class="floating-shape shape-two"></div>
+            <div class="floating-shape shape-three"></div>
+
+            <div class="welcome-content">
+                <div class="logo">Insta<span>Learn</span></div>
+                <p class="welcome-label">YOUR PERSONAL LEARNING SPACE</p>
+
+                <h1>Learn smarter.<br><span>Grow faster.</span></h1>
+
+                <p class="welcome-description">
+                    Practice, track your progress, and learn at your own pace with InstaLearn.
+                </p>
+
+                <div class="welcome-buttons">
+                    <button class="btn primary" onclick="showPage('loginPage')">
+                        Login
+                    </button>
+
+                    <button class="btn secondary" onclick="showPage('registerPage')">
+                        Create Account
+                    </button>
+                </div>
+
+                <a href="https://www.facebook.com/instalearnfb"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="welcome-social-link">
+                    📘 Contact InstaLearn on Facebook
+                </a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ================= LOGIN ================= -->
+    <section id="loginPage" class="page auth-page">
+        <div class="auth-container">
+
+            <div class="auth-brand">
+                <div class="logo">Insta<span>Learn</span></div>
+                <h1>Welcome back.</h1>
+                <p>Continue your learning journey.</p>
+            </div>
+
+            <div class="auth-card">
+                <h2>Login</h2>
+                <p class="card-subtitle">Enter your account details below.</p>
+
+                <form id="loginForm">
+
+                    <label>Email Address</label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="example@gmail.com"
+                        required
+                    >
+
+                    <label>Password</label>
+
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            placeholder="Enter your password"
+                            required
+                        >
+                        <button type="button" class="show-password"
+                                onclick="togglePassword('loginPassword', this)">
+                            Show
+                        </button>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Remember me</span>
+                        </label>
+
+                        <button type="button" class="text-button"
+                                onclick="showPage('forgotPage')">
+                            Forgot password?
+                        </button>
+                    </div>
+
+                    <button class="btn primary full" type="submit" id="loginSubmitBtn">
+                        Login
+                    </button>
+
+                    <p id="loginLockNote" class="login-lock-note hidden"></p>
+
+                    <div id="loginPasswordHint" class="login-password-hint hidden" role="status" aria-live="polite">
+                        <div class="login-password-hint-icon">🔐</div>
+                        <div>
+                            <strong>Password reminder</strong>
+                            <span id="loginPasswordHintText"></span>
+                        </div>
+                    </div>
+
+                </form>
+
+                <p class="switch-text">
+                    Don't have an account?
+                    <button class="text-button"
+                            onclick="showPage('registerPage')">
+                        Create Account
+                    </button>
+                </p>
+
+                <button class="back-button" onclick="showPage('welcomePage')">
+                    ← Back
+                </button>
+
+                <a href="https://www.facebook.com/instalearnfb"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="welcome-social-link">
+                    📘 Contact InstaLearn on Facebook
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- ================= REGISTER ================= -->
+    <section id="registerPage" class="page auth-page">
+        <div class="auth-container">
+
+            <div class="auth-brand">
+                <div class="logo">Insta<span>Learn</span></div>
+                <h1>Start learning.</h1>
+                <p>Create your personal learning account.</p>
+            </div>
+
+            <div class="auth-card">
+
+                <h2>Create Account</h2>
+                <p class="card-subtitle">It only takes a few seconds.</p>
+
+                <form id="registerForm">
+
+                    <label>Display Name</label>
+                    <input
+                        type="text"
+                        id="registerName"
+                        placeholder="Your name"
+                        required
+                    >
+
+                    <label>Email Address</label>
+                    <input
+                        type="email"
+                        id="registerEmail"
+                        placeholder="example@gmail.com"
+                        required
+                    >
+
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        placeholder="Create a password"
+                        oninput="updatePasswordStrength('registerPassword', 'registerPasswordStrength')"
+                        required
+                    >
+                    <div id="registerPasswordStrength" class="password-strength-meter hidden">
+                        <div class="password-strength-bar"></div>
+                        <span class="password-strength-label"></span>
+                    </div>
+
+                    <label>Confirm Password</label>
+                    <input
+                        type="password"
+                        id="registerConfirm"
+                        placeholder="Confirm your password"
+                        required
+                    >
+
+                    <label class="checkbox-label agreement">
+                        <input type="checkbox" required>
+                        <span>I agree to the
+                            <button type="button" class="text-button inline-link" onclick="openTerms(event)">Terms & Conditions</button>.
+                        </span>
+                    </label>
+
+                    <button class="btn primary full" type="submit" id="registerSubmitBtn">
+                        Create Account
+                    </button>
+
+                </form>
+
+                <p class="switch-text">
+                    Already have an account?
+                    <button class="text-button"
+                            onclick="showPage('loginPage')">
+                        Login
+                    </button>
+                </p>
+
+                <button class="back-button" onclick="showPage('welcomePage')">
+                    ← Back
+                </button>
+
+                <a href="https://www.facebook.com/instalearnfb"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="welcome-social-link">
+                    📘 Contact InstaLearn on Facebook
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ================= FORGOT PASSWORD ================= -->
+    <section id="forgotPage" class="page auth-page">
+
+        <div class="auth-container single-auth">
+
+            <div class="auth-card">
+
+                <div class="forgot-icon">🔐</div>
+
+                <h2>Forgot Password?</h2>
+
+                <p class="card-subtitle">
+                    Enter your Gmail address and we'll send you a secure password reset email.
+                </p>
+
+                <form id="forgotForm">
+
+                    <label>Email Address</label>
+
+                    <input
+                        type="email"
+                        id="forgotEmail"
+                        placeholder="example@gmail.com"
+                        required
+                    >
+
+                    <button class="btn primary full" type="submit">
+                        Send Reset Email
+                    </button>
+
+                </form>
+
+                <button class="back-button" onclick="showPage('loginPage')">
+                    ← Back to Login
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= EMAIL VERIFICATION GATE ================= -->
+    <section id="verificationPage" class="page auth-page">
+        <div class="auth-container single-auth">
+            <div class="auth-card verification-card">
+                <div class="verification-large-icon">✉️</div>
+                <h2>Verify your Gmail</h2>
+                <p class="card-subtitle">
+                    Your InstaLearn account was created, but you need to verify your Gmail before you can enter the app.
+                </p>
+
+                <div class="verification-email-box">
+                    <strong id="verificationEmailText">your-email@gmail.com</strong>
+                    <span>Check your Inbox and Spam/Junk folder.</span>
+                </div>
+
+                <button class="btn primary full" type="button" onclick="checkEmailVerification(true)">
+                    I Already Verified
+                </button>
+
+                <button class="btn secondary full verification-resend-btn" type="button" onclick="resendVerificationEmail()">
+                    Resend Verification Email
+                </button>
+
+                <p class="verification-help-text">
+                    Open the latest verification email and click the secure verification link. Then return here and press <strong>I Already Verified</strong>.
+                </p>
+
+                <button class="back-button" onclick="logoutFromVerification()">
+                    ← Back to Welcome
+                </button>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ================= APP ================= -->
+    <section id="appPage" class="page">
+
+        <div class="app-layout">
+
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+
+                <div class="sidebar-logo">
+                    Insta<span>Learn</span>
+                </div>
+
+                <nav>
+
+                    <button type="button" class="nav-item active"
+                            data-section="dashboardSection">
+                        <span>⌂</span>
+                        Dashboard
+                    </button>
+
+                    <button type="button" class="nav-item"
+                            data-section="subjectsSection">
+                        <span>◈</span>
+                        My Subjects
+                    </button>
+
+                    <button type="button" class="nav-item"
+                            data-section="progressSection">
+                        <span>◒</span>
+                        Progress
+                    </button>
+
+                    <button type="button" class="nav-item"
+                            data-section="settingsSection">
+                        <span>⚙</span>
+                        Settings
+                    </button>
+
+                    <button type="button" class="nav-item"
+                            data-section="helpSection">
+                        <span>❔</span>
+                        Help Center
+                    </button>
+
+                    <button type="button" class="nav-item"
+                            data-section="aboutSection">
+                        <span>ℹ</span>
+                        About
+                    </button>
+
+                </nav>
+
+                <div class="sidebar-bottom">
+
+                    <div class="mini-profile">
+
+                        <div class="avatar" id="sidebarAvatar">
+                            M
+                        </div>
+
+                        <div>
+                            <strong id="sidebarName">Student</strong>
+                            <small>Student</small>
+                        </div>
+
+                    </div>
+
+                    <button class="logout-btn" onclick="logout()">
+                        ↪ Logout
+                    </button>
+
+                </div>
+
+            </aside>
+
+
+            <!-- MAIN -->
+            <main class="main-content">
+
+                <!-- EMAIL VERIFICATION NOTICE -->
+                <div id="emailVerificationBanner" class="security-banner hidden">
+                    <div>
+                        <strong>Verify your Gmail</strong>
+                        <span>Verify your Gmail to secure your InstaLearn account.</span>
+                    </div>
+                    <div class="verification-actions">
+                        <button type="button" class="text-button" onclick="resendVerificationEmail()">Resend email</button>
+                        <button type="button" class="text-button" onclick="checkEmailVerification()">I already verified</button>
+                    </div>
+                </div>
+
+                <!-- MOBILE HEADER -->
+                <header class="mobile-header">
+                    <div class="sidebar-logo">
+                        Insta<span>Learn</span>
+                    </div>
+
+                    <button onclick="toggleSidebar()" class="menu-btn">
+                        ☰
+                    </button>
+                </header>
+
+
+                <!-- DASHBOARD -->
+                <div id="dashboardSection" class="content-section">
+
+                    <div class="topbar">
+
+                        <div>
+                            <p class="small-label">LEARNING DASHBOARD</p>
+                            <h1>Good day, <span id="dashboardName">Student</span>.</h1>
+                            <p class="muted">
+                                Ready to learn something new today?
+                            </p>
+                        </div>
+
+                        <div class="top-avatar" id="topAvatar">
+                            S
+                        </div>
+
+                    </div>
+
+                    <div id="gettingStartedTip" class="empty-state hidden" style="margin-bottom:25px;">
+                        <strong>👋 Start your first lesson!</strong>
+                        <span>Answer a few practice questions to start tracking your progress and streak.</span>
+                        <button class="btn primary" onclick="openSubjects()">Start Learning</button>
+                    </div>
+
+
+                    <div class="hero-card">
+
+                        <div>
+                            <p class="hero-small">KEEP LEARNING</p>
+
+                            <h2>Your knowledge is<br>
+                                your superpower.</h2>
+
+                            <p>
+                                Pick a subject and continue your learning journey.
+                            </p>
+
+                            <button class="btn light"
+                                    onclick="if (confirm('Explore your subjects now?')) openSubjects()">
+                                Explore Subjects →
+                            </button>
+                        </div>
+
+                        <div class="hero-decoration">
+                            <div class="book-icon">✦</div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stats-grid">
+
+                        <div class="stat-card">
+                            <span class="stat-icon">◎</span>
+                            <div>
+                                <strong id="overallProgress">0%</strong>
+                                <small>Overall Progress</small>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="stat-icon">✓</span>
+                            <div>
+                                <strong id="totalQuestions">0</strong>
+                                <small>Questions Answered</small>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <span class="stat-icon">🔥</span>
+                            <div>
+                                <strong id="streakCount">1</strong>
+                                <small>Learning Streak</small>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-card" style="margin-bottom:30px;">
+                        <h2>Subject Progress</h2>
+                        <div id="dashboardProgressChart" class="progress-subject-list" style="margin-top:18px;"></div>
+                    </div>
+
+
+                    <div class="section-heading">
+                        <div>
+                            <h2>Your Subjects</h2>
+                            <p>Choose a subject to continue learning.</p>
+                        </div>
+
+                        <button class="text-button"
+                                onclick="openSubjects()">
+                            View all →
+                        </button>
+                    </div>
+
+                    <div id="dashboardSubjects" class="subject-grid"></div>
+
+
+                    <div class="dashboard-feature-grid">
+
+                        <section class="dashboard-feature-card learning-plan-card">
+                            <div class="feature-card-top">
+                                <div>
+                                    <p class="small-label">PERSONALIZED PLAN</p>
+                                    <h2>Your Learning Plan</h2>
+                                </div>
+                                <span class="feature-icon">🎯</span>
+                            </div>
+                            <p id="dashboardGoalText" class="feature-copy">Keep building your skills one step at a time.</p>
+                            <div class="plan-progress-row">
+                                <div>
+                                    <strong id="planProgressPercent">0%</strong>
+                                    <span>overall mastery</span>
+                                </div>
+                                <div class="mini-progress"><div id="planProgressBar"></div></div>
+                            </div>
+                            <div class="feature-actions">
+                                <button class="btn primary" onclick="openRecommendedLearning()">Continue Learning</button>
+                                <button class="btn ghost" onclick="openSettings()">Edit Goal</button>
+                            </div>
+                        </section>
+
+                        <section class="dashboard-feature-card tutor-help-card">
+                            <div class="feature-card-top">
+                                <div>
+                                    <p class="small-label">HUMAN SUPPORT</p>
+                                    <h2>Need a Tutor?</h2>
+                                </div>
+                                <span class="feature-icon">👨‍🏫</span>
+                            </div>
+                            <p class="feature-copy">Get help when a lesson or practice question is giving you trouble.</p>
+                            <div class="support-points">
+                                <span>✓ Ask about a lesson</span>
+                                <span>✓ Request tutor support</span>
+                                <span>✓ Plan your next study session</span>
+                            </div>
+                            <button class="btn secondary" onclick="requestTutorHelp()">Request Tutor Help</button>
+
+                            <div class="contact-links">
+                                <p class="muted small">Or reach us directly:</p>
+                                <div class="contact-links-row">
+                                    <a class="contact-link messenger" href="https://m.me/instalearn" target="_blank" rel="noopener">
+                                        <span>💬</span> Messenger
+                                    </a>
+                                    <a class="contact-link gmail" href="mailto:instalearn.support@gmail.com" target="_blank" rel="noopener">
+                                        <span>✉️</span> Gmail
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <div class="dashboard-next-grid">
+                        <section class="next-step-card">
+                            <div class="next-step-copy">
+                                <p class="small-label">RECOMMENDED FOR YOU</p>
+                                <h2 id="dashboardNextTitle">Your next learning step</h2>
+                                <p id="dashboardNextText">Choose a subject to get a personalized next step.</p>
+                                <button class="btn primary" onclick="openRecommendedLearning()">Continue →</button>
+                            </div>
+                            <div class="next-step-ring" id="dashboardNextRing">0%</div>
+                        </section>
+                        <section class="study-plan-card">
+                            <div class="feature-card-top">
+                                <div><p class="small-label">STUDY PLAN</p><h2>This Week</h2></div>
+                                <span class="feature-icon">🗓️</span>
+                            </div>
+                            <div class="study-plan-list">
+                                <button onclick="openRecommendedLearning()"><span>Today</span><strong>Continue your next topic</strong><em>15 min</em></button>
+                                <button onclick="openSubjects()"><span>Next</span><strong>Explore a new subject</strong><em>10 min</em></button>
+                                <button onclick="openProgress()"><span>Review</span><strong>Check your weak areas</strong><em>5 min</em></button>
+                            </div>
+                        </section>
+                    </div>
+
+
+                    <div class="dashboard-feature-card learning-plan-card" style="margin-bottom:30px;">
+                        <div class="feature-card-top">
+                            <div>
+                                <p class="small-label">PLATFORM INSIGHTS (SAMPLE DATA)</p>
+                                <h2>InstaLearn at a Glance</h2>
+                            </div>
+                            <span class="feature-icon">📊</span>
+                        </div>
+                        <div class="stats-grid" style="margin-top:10px;">
+                            <div class="stat-card">
+                                <span class="stat-icon">👥</span>
+                                <div><strong>1,240</strong><small>Active Learners</small></div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">📚</span>
+                                <div><strong>Mathematics</strong><small>Most Practiced Subject</small></div>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-icon">✅</span>
+                                <div><strong>18,530</strong><small>Questions Answered Today</small></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="quick-actions-card">
+                        <div>
+                            <p class="small-label">QUICK ACTIONS</p>
+                            <h2>What do you want to do?</h2>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <button onclick="openSubjects()"><span>📚</span><strong>Browse Subjects</strong><small>Explore your lessons</small></button>
+                            <button onclick="openProgress()"><span>📈</span><strong>View Progress</strong><small>See your improvement</small></button>
+                            <button onclick="openChatWith('How can I use InstaLearn?')"><span>💬</span><strong>Ask Assistant</strong><small>Get website help</small></button>
+                            <button onclick="openSettings()"><span>⚙️</span><strong>Account Settings</strong><small>Manage your profile</small></button>
+                        </div>
+                    </div>
+
+
+                    <div class="section-heading recent-heading">
+                        <div>
+                            <h2>Recent Activity</h2>
+                            <p>Your latest practice sessions.</p>
+                        </div>
+                    </div>
+
+                    <div id="recentActivity" class="activity-list"></div>
+
+                </div>
+
+
+                <!-- SUBJECTS -->
+                <div id="subjectsSection" class="content-section hidden">
+
+                    <div class="section-title subjects-library-head">
+                        <div>
+                            <p class="small-label">LEARNING LIBRARY</p>
+                            <h1>Build Your Learning Path</h1>
+                            <p>Choose subjects, follow topics, practice at your level, and keep your progress moving.</p>
+                        </div>
+                        <div class="library-summary">
+                            <strong id="subjectLibraryCount">0</strong>
+                            <span>subjects available</span>
+                        </div>
+                    </div>
+
+                    <div class="subject-library-tools">
+                        <div class="subject-search-wrap">
+                            <span>⌕</span>
+                            <input id="subjectSearch" type="search" placeholder="Search subjects or topics..." oninput="renderSubjects()">
+                        </div>
+                        <div class="subject-filter-tabs" role="tablist">
+                            <button class="subject-filter active" data-filter="all" onclick="setSubjectFilter('all')">All</button>
+                            <button class="subject-filter" data-filter="selected" onclick="setSubjectFilter('selected')">My Subjects</button>
+                            <button class="subject-filter" data-filter="progress" onclick="setSubjectFilter('progress')">In Progress</button>
+                            <button class="subject-filter" data-filter="new" onclick="setSubjectFilter('new')">Not Started</button>
+                        </div>
+                    </div>
+
+                    <div id="allSubjects" class="subject-grid large"></div>
+                    <div id="subjectLibraryEmpty" class="library-empty hidden">
+                        <div>🔎</div>
+                        <strong>No subjects found</strong>
+                        <span>Try another subject name or topic.</span>
+                    </div>
+
+                </div>
+
+
+                <!-- SUBJECT DETAIL -->
+                <div id="subjectDetailSection"
+                     class="content-section hidden">
+
+                    <button class="back-link"
+                            onclick="openSubjects()">
+                        ← Back to Subjects
+                    </button>
+
+                    <div class="subject-detail-header">
+
+                        <div id="detailIcon" class="detail-icon">
+                            🔢
+                        </div>
+
+                        <div>
+                            <p class="small-label">SUBJECT</p>
+                            <h1 id="detailTitle">Mathematics</h1>
+                            <p id="detailDescription">
+                                Build your mathematical skills.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail-progress-card">
+
+                        <div>
+                            <span>Your Progress</span>
+                            <strong id="detailProgress">0%</strong>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div id="detailProgressBar"></div>
+                        </div>
+
+                        <div class="subject-detail-metrics">
+                            <div><strong id="detailTopicCount">0</strong><span>Core topics</span></div>
+                            <div><strong>3</strong><span>Difficulty levels</span></div>
+                            <div><strong>10</strong><span>Questions / level</span></div>
+                        </div>
+
+                    </div>
+
+                    <div class="subject-next-card">
+                        <div class="subject-next-icon">→</div>
+                        <div>
+                            <p class="small-label">RECOMMENDED NEXT STEP</p>
+                            <h3 id="detailNextTitle">Start your first lesson</h3>
+                            <p id="detailNextText">Begin with the first topic and build your mastery step by step.</p>
+                        </div>
+                        <button id="detailNextButton" class="btn primary" onclick="openLearningSection()">Start Learning</button>
+                    </div>
+
+
+                    <div class="subject-insight-grid">
+                        <section class="insight-card diagnostic-card">
+                            <span class="insight-icon">🧭</span>
+                            <div><p class="small-label">KNOW YOUR LEVEL</p><h3>Quick Skill Check</h3><p>Take a short 5-question check to see which topics need the most attention.</p></div>
+                            <button class="btn secondary" onclick="startDiagnostic()">Start Check</button>
+                        </section>
+                        <section class="insight-card resources-card">
+                            <span class="insight-icon">🗂️</span>
+                            <div><p class="small-label">LEARNING RESOURCES</p><h3>Study smarter</h3><p id="detailOutcomeText">Review lessons, quick tips, then practice at your level.</p></div>
+                            <button class="btn ghost" onclick="openLearningSection()">View Lessons</button>
+                        </section>
+                    </div>
+
+                    <div class="activity-options">
+
+                        <div class="activity-card">
+
+                            <div class="activity-icon">📖</div>
+
+                            <h2>Learn</h2>
+
+                            <p>
+                                Review important concepts and topics.
+                            </p>
+
+                            <button class="btn secondary"
+                                    onclick="openLearningSection()">
+                                Start Learning
+                            </button>
+
+                        </div>
+
+
+                        <div class="activity-card featured">
+
+                            <div class="activity-icon">🧠</div>
+
+                            <h2>Practice</h2>
+
+                            <p>
+                                Test your knowledge with interactive questions.
+                            </p>
+
+                            <button class="btn primary"
+                                    onclick="if (confirm('Start a practice session for this subject?')) openPracticeSetup()">
+                                Practice Now
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="topics-heading-row">
+                        <div>
+                            <p class="small-label">CURRICULUM</p>
+                            <h2 class="topics-title">What you'll learn</h2>
+                        </div>
+                        <span class="topics-note">Follow the path in order or jump to any topic.</span>
+                    </div>
+
+                    <div id="topicList" class="topic-list rich"></div>
+
+                </div>
+
+
+                <!-- LEARNING LESSONS -->
+                <div id="learningSection" class="content-section hidden">
+
+                    <button class="back-link" onclick="openSubjectDetail(currentSubject)">
+                        ← Back to Subject
+                    </button>
+
+                    <div class="learning-header">
+                        <div class="detail-icon" id="learningIcon">📖</div>
+                        <div>
+                            <p class="small-label">LEARNING PATH</p>
+                            <h1 id="learningTitle">Mathematics</h1>
+                            <p id="learningIntro" class="muted">Learn the key concepts step by step.</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-progress-card learning-progress-card">
+                        <div>
+                            <span>Subject Progress</span>
+                            <strong id="learningProgress">0% complete</strong>
+                        </div>
+                        <div class="progress-bar"><div id="learningProgressBar"></div></div>
+                    </div>
+
+                    <div id="lessonCards" class="lesson-grid"></div>
+
+                    <div class="learning-complete-card">
+                        <div>
+                            <strong>Finished reviewing?</strong>
+                            <span>Mark this learning session complete to update your subject progress.</span>
+                        </div>
+                        <button id="learningCompleteBtn" class="btn primary" onclick="completeLearningLesson()">Mark Lesson Complete</button>
+                    </div>
+
+                </div>
+
+
+                <!-- PRACTICE SETUP -->
+                <div id="practiceSetupSection"
+                     class="content-section hidden">
+
+                    <button class="back-link"
+                            onclick="openSubjectDetail(currentSubject)">
+                        ← Back to Subject
+                    </button>
+
+                    <div class="practice-header">
+                        <p class="small-label">PRACTICE TIME</p>
+                        <h1>Choose Your Difficulty</h1>
+                        <p>
+                            Challenge yourself and improve your skills.
+                        </p>
+                    </div>
+
+                    <div class="difficulty-grid">
+
+                        <button class="difficulty-card easy"
+                                onclick="if (confirm('Start Easy practice?')) startQuiz('Easy')">
+                            <span>🌱</span>
+                            <h2>Easy</h2>
+                            <p>Basic questions</p>
+                            <strong>10 Questions</strong>
+                        </button>
+
+                        <button class="difficulty-card medium"
+                                onclick="if (confirm('Start Medium practice?')) startQuiz('Medium')">
+                            <span>⚡</span>
+                            <h2>Medium</h2>
+                            <p>Test your understanding</p>
+                            <strong>10 Questions</strong>
+                        </button>
+
+                        <button class="difficulty-card hard"
+                                onclick="if (confirm('Start Hard practice?')) startQuiz('Hard')">
+                            <span>🔥</span>
+                            <h2>Hard</h2>
+                            <p>Challenge yourself</p>
+                            <strong>10 Questions</strong>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUIZ -->
+                <div id="quizSection"
+                     class="content-section hidden">
+
+                    <div class="quiz-top">
+
+                        <button class="back-link"
+                                onclick="if (confirm('Exit this practice session? Your current unanswered progress will be lost.')) openPracticeSetup()">
+                            ← Exit Practice
+                        </button>
+
+                        <span id="quizDifficulty"
+                              class="difficulty-badge">
+                            Easy
+                        </span>
+
+                    </div>
+
+                    <div class="quiz-progress-info">
+
+                        <span id="questionNumber">
+                            Question 1 / 10
+                        </span>
+
+                        <span id="scoreDisplay">
+                            Score: 0
+                        </span>
+
+                    </div>
+
+                    <div class="quiz-progress">
+                        <div id="quizProgressBar"></div>
+                    </div>
+
+
+                    <div class="quiz-card">
+
+                        <p class="question-label">
+                            QUESTION
+                        </p>
+
+                        <h1 id="questionText">
+                            What is 1 + 1?
+                        </h1>
+
+                        <div id="answerOptions"
+                             class="answer-options"></div>
+
+                        <button id="nextQuestionBtn"
+                                class="btn primary full"
+                                onclick="nextQuestion()"
+                                disabled>
+                            Next Question →
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RESULTS -->
+                <div id="resultsSection"
+                     class="content-section hidden">
+
+                    <div class="results-card">
+
+                        <div class="result-icon">
+                            🏆
+                        </div>
+
+                        <p class="small-label">
+                            PRACTICE COMPLETE
+                        </p>
+
+                        <h1>Great job!</h1>
+
+                        <div class="big-score">
+                            <strong id="finalScore">8</strong>
+                            <span>/ 10</span>
+                        </div>
+
+                        <div class="result-percent"
+                             id="finalPercent">
+                            80%
+                        </div>
+
+                        <p id="resultMessage">
+                            You're doing great. Keep practicing!
+                        </p>
+
+
+                        <div class="result-stats">
+
+                            <div>
+                                <strong id="correctAnswers">8</strong>
+                                <span>Correct</span>
+                            </div>
+
+                            <div>
+                                <strong id="wrongAnswers">2</strong>
+                                <span>Wrong</span>
+                            </div>
+
+                            <div>
+                                <strong id="resultAccuracy">80%</strong>
+                                <span>Accuracy</span>
+                            </div>
+
+                        </div>
+
+
+                        <div id="mistakeReviewCard" class="mistake-review-card hidden">
+                            <div><p class="small-label">SMART REVIEW</p><h3>Topics to review</h3><p>Focus on these questions before your next attempt.</p></div>
+                            <div id="mistakeReviewList" class="mistake-review-list"></div>
+                            <button class="btn secondary" onclick="openLearningSection()">Review Lessons →</button>
+                        </div>
+
+                        <div class="result-buttons">
+
+                            <button class="btn primary"
+                                    onclick="if (confirm('Start another practice session?')) openPracticeSetup()">
+                                Try Again
+                            </button>
+
+                            <button class="btn secondary"
+                                    onclick="if (confirm('Leave the results and return to the subject?')) openSubjectDetail(currentSubject)">
+                                Back to Subject
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PROGRESS -->
+                <div id="progressSection"
+                     class="content-section hidden">
+
+                    <div class="section-title">
+                        <p class="small-label">YOUR JOURNEY</p>
+                        <h1>Learning Progress</h1>
+                        <p>
+                            See how far you've come.
+                        </p>
+                    </div>
+
+                    <div class="progress-toolbar">
+                        <button class="btn secondary" type="button" onclick="exportProgressReport()">
+                            📄 Export Report
+                        </button>
+                    </div>
+
+                    <div class="progress-chart-card">
+                        <h2>Progress Overview</h2>
+                        <canvas id="progressOverviewChart" width="600" height="220"></canvas>
+                    </div>
+
+                    <div id="progressSubjects"
+                         class="progress-subject-list"></div>
+
+                    <div id="certificatesRow" class="certificates-row"></div>
+
+                    <div class="achievements">
+
+                        <h2>Achievements</h2>
+
+                        <div class="achievement-grid">
+
+                            <div class="achievement">
+                                <span>🌱</span>
+                                <strong>First Practice</strong>
+                                <small>Complete your first quiz</small>
+                            </div>
+
+                            <div class="achievement">
+                                <span>🏆</span>
+                                <strong>Perfect Score</strong>
+                                <small>Get 100% on a quiz</small>
+                            </div>
+
+                            <div class="achievement">
+                                <span>🔥</span>
+                                <strong>Keep Going</strong>
+                                <small>Maintain your learning streak</small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SETTINGS -->
+                <div id="settingsSection"
+                     class="content-section hidden">
+
+                    <div class="section-title">
+                        <p class="small-label">ACCOUNT</p>
+                        <h1>Settings</h1>
+                        <p>
+                            Manage your InstaLearn account.
+                        </p>
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Appearance</h2>
+
+                        <p class="muted small" style="margin-bottom:15px;">
+                            Switch between light and dark theme. Your choice is remembered on this device.
+                        </p>
+
+                        <label class="toggle-switch-label">
+                            <span>Dark Mode</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </label>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Demo Tools</h2>
+
+                        <p class="muted small" style="margin-bottom:15px;">
+                            For capstone demo purposes — instantly fill your account with sample progress, streak, and activity so the dashboard looks populated.
+                        </p>
+
+                        <button class="btn secondary" onclick="seedDemoData()">
+                            Load Demo Data
+                        </button>
+
+                        <button class="btn ghost" onclick="resetProgressData()">
+                            Reset My Progress
+                        </button>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Profile</h2>
+
+                        <div class="profile-editor">
+
+                            <div class="large-avatar"
+                                 id="settingsAvatar">
+                                S
+                            </div>
+
+                            <div>
+                                <input type="file"
+                                       id="photoUpload"
+                                       accept="image/*"
+                                       hidden>
+
+                                <button class="btn secondary"
+                                        onclick="document.getElementById('photoUpload').click()">
+                                    Upload Display Photo
+                                </button>
+
+                                <p class="muted small">
+                                    JPG, PNG or WEBP
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <label>Display Name</label>
+
+                        <input type="text"
+                               id="settingsName"
+                               placeholder="Your name">
+
+                        <label>Email Address</label>
+
+                        <input type="email"
+                               id="settingsEmail"
+                               disabled>
+
+                        <button class="btn primary"
+                                onclick="saveProfile()">
+                            Save Profile
+                        </button>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Change Password</h2>
+
+                        <label>Current Password</label>
+
+                        <input type="password"
+                               id="currentPassword"
+                               placeholder="Current password">
+
+                        <label>New Password</label>
+
+                        <input type="password"
+                               id="newPassword"
+                               placeholder="New password"
+                               oninput="updatePasswordStrength('newPassword', 'newPasswordStrength')">
+                        <div id="newPasswordStrength" class="password-strength-meter hidden">
+                            <div class="password-strength-bar"></div>
+                            <span class="password-strength-label"></span>
+                        </div>
+
+                        <label>Confirm New Password</label>
+
+                        <input type="password"
+                               id="confirmNewPassword"
+                               placeholder="Confirm new password">
+
+                        <button class="btn primary"
+                                onclick="changePassword()">
+                            Update Password
+                        </button>
+
+                        <button type="button" class="text-button settings-reset-link" onclick="sendSettingsResetEmail()">
+                            Forgot your current password? Send reset email
+                        </button>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Learning Preferences</h2>
+
+                        <p class="muted">
+                            Personalize your learning dashboard.
+                        </p>
+
+                        <label>Primary Learning Goal</label>
+                        <select id="learningGoal" class="settings-select" onchange="saveLearningGoal(this.value)">
+                            <option value="Improve my grades">Improve my grades</option>
+                            <option value="Master difficult subjects">Master difficult subjects</option>
+                            <option value="Prepare for exams">Prepare for exams</option>
+                            <option value="Learn at my own pace">Learn at my own pace</option>
+                        </select>
+
+                        <div class="preference-divider"></div>
+
+                        <p class="muted">Your selected subjects appear here.</p>
+
+                        <div id="settingsSubjects"
+                             class="settings-subjects"></div>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Feedback</h2>
+
+                        <p class="muted small" style="margin-bottom:15px;">
+                            Found a bug or have an idea? Let us know.
+                        </p>
+
+                        <label>Type</label>
+                        <select id="feedbackType" class="settings-select">
+                            <option value="Bug">Report a bug</option>
+                            <option value="Feature">Suggest a feature</option>
+                            <option value="Other">Other</option>
+                        </select>
+
+                        <label>Details</label>
+                        <textarea id="feedbackMessage"
+                                  rows="4"
+                                  placeholder="Tell us what happened or what you'd like to see..."></textarea>
+
+                        <button class="btn primary" onclick="submitFeedback()">
+                            Send Feedback
+                        </button>
+
+                        <p id="feedbackStatus" class="muted small hidden" style="margin-top:10px;"></p>
+
+                    </div>
+
+
+                    <div class="settings-card">
+
+                        <h2>Contact Us</h2>
+
+                        <p class="muted small" style="margin-bottom:15px;">
+                            Reach the InstaLearn team directly through our social media page.
+                        </p>
+
+                        <a href="https://www.facebook.com/instalearnfb"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn secondary">
+                            📘 Message us on Facebook
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HELP CENTER -->
+                <div id="helpSection"
+                     class="content-section hidden">
+
+                    <div class="section-title">
+                        <p class="small-label">SUPPORT</p>
+                        <h1>Help Center</h1>
+                        <p>
+                            Answers to common questions about using InstaLearn.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>How do I add a subject?</h2>
+                        <p class="muted small">
+                            Go to My Subjects and use the search and filters to find a subject, then tap it to add it to your dashboard.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>How is my mastery / progress calculated?</h2>
+                        <p class="muted small">
+                            Mastery is based on the topics you've completed and how well you scored on their quizzes. Check the Progress tab for a full breakdown per subject.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>I forgot my password. What do I do?</h2>
+                        <p class="muted small">
+                            On the login screen, tap "Forgot password?" and enter your registered email. You can also change your password anytime from Settings while logged in.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>How do I change my display name or photo?</h2>
+                        <p class="muted small">
+                            Go to Settings → Profile to upload a display photo and update your display name.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>Is my data saved if I use a different device?</h2>
+                        <p class="muted small">
+                            Your account (login) is powered by Firebase, but progress and profile details are currently stored on this browser/device as part of the prototype.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>Still need help?</h2>
+                        <p class="muted small" style="margin-bottom:15px;">
+                            Message the InstaLearn team on Facebook and we'll get back to you.
+                        </p>
+                        <a href="https://www.facebook.com/instalearnfb"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn secondary">
+                            📘 Message us on Facebook
+                        </a>
+                    </div>
+
+                </div>
+
+
+                <!-- ABOUT -->
+                <div id="aboutSection"
+                     class="content-section hidden">
+
+                    <div class="section-title">
+                        <p class="small-label">ABOUT</p>
+                        <h1>About InstaLearn</h1>
+                        <p>
+                            A student-focused learning platform built as a capstone project.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>Our Mission</h2>
+                        <p class="muted small">
+                            InstaLearn helps students study smarter by organizing subjects, tracking mastery, and guiding them to their next best topic — all in one simple dashboard.
+                        </p>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>The Team</h2>
+                        <p class="muted small" style="margin-bottom:15px;">
+                            InstaLearn was designed and developed by:
+                        </p>
+                        <div class="settings-subjects" id="aboutTeamList">
+                            <span>Project Lead / Developer</span>
+                            <span>UI / UX Design</span>
+                            <span>Quality Assurance</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h2>Get in Touch</h2>
+                        <p class="muted small" style="margin-bottom:15px;">
+                            Follow or message us on social media for updates and support.
+                        </p>
+                        <a href="https://www.facebook.com/instalearnfb"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn secondary">
+                            📘 InstaLearn on Facebook
+                        </a>
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CHATBOT ================= -->
+
+    <button id="chatButton"
+            class="chat-button"
+            onclick="toggleChat()">
+        💬
+    </button>
+
+
+    <div id="chatWindow" class="chat-window">
+
+        <div class="chat-header">
+
+            <div>
+                <strong>InstaLearn Assistant</strong>
+                <small>Website Help</small>
+            </div>
+
+            <button onclick="toggleChat()">×</button>
+
+        </div>
+
+
+        <div id="chatMessages" class="chat-messages">
+
+            <div class="bot-message">
+                Hi! I'm the InstaLearn Assistant 👋 I can help you navigate the website, explain how features work, and guide you through your account, subjects, lessons, practice, progress, settings, password reset, and more.
+            </div>
+
+        </div>
+
+
+        <div class="chat-suggestions">
+
+            <button onclick="askBot('How do I login?')">
+                Login help
+            </button>
+
+            <button onclick="askBot('How do I reset my password?')">
+                Reset password
+            </button>
+
+            <button onclick="askBot('How do I practice?')">
+                Practice
+            </button>
+
+            <button onclick="askBot('Take me to progress')">
+                Progress
+            </button>
+
+        </div>
+
+
+        <div class="chat-input">
+
+            <input type="text"
+                   id="chatInput"
+                   placeholder="Ask about InstaLearn..."
+                   onkeydown="handleChatKey(event)">
+
+            <button onclick="sendChat()">
+                ↑
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase Web SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+
+    <!-- EmailJS: sends the security code to the user's real Gmail inbox -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
